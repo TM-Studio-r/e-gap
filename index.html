@@ -42,12 +42,10 @@
             --scrollbar-thumb: rgba(255, 255, 255, 0.15);
         }
 
-        /* ================= استایل‌های پایه ================= */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: #050505 var(--bg-image); background-size: 100% 100%; color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background-color 0.4s ease; }
         .glass { background: var(--glass-bg); backdrop-filter: blur(13px); -webkit-backdrop-filter: blur(13px); border: 1px solid var(--glass-border); box-shadow: var(--shadow-glass); }
 
-        /* ================= صفحه لاگین ================= */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: var(--bg-color); z-index: 1000; }
         .login-box { width: 320px; text-align: center; display: flex; flex-direction: column; align-items: center; }
         .login-logo { width: 100px; height: 100px; border-radius: 50%; background: var(--accent-color); margin-bottom: 20px; display: flex; justify-content: center; align-items: center; box-shadow: var(--neon-glow); }
@@ -59,7 +57,6 @@
         .floating-btn { width: 60px; height: 60px; border-radius: 50%; background: var(--accent-color); border: none; color: #fff; font-size: 24px; cursor: pointer; box-shadow: var(--neon-glow); transition: transform 0.2s; display: flex; justify-content: center; align-items: center; }
         .floating-btn:active { transform: scale(0.95); }
 
-        /* ================= محیط اصلی چت ================= */
         #chat-screen { display: none; flex-direction: column; height: 100vh; position: relative; }
         header { position: fixed; top: 8px; left: 12px; right: 12px; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 100; border-radius: 20px; }
         .header-left { display: flex; align-items: center; gap: 12px; }
@@ -258,18 +255,23 @@
             .then(res => res.json())
             .then(data => {
                 if (data.length > lastMessageCount) {
-                    // نوتیف داخلی (وقتی تب بازه)
+                    
+                    // ---> اینجا تغییر دادم: چک میکنه اگه تو تب دیگه‌ای هستی نوتیف بده <---
                     if (lastMessageCount > 0 && "Notification" in window && Notification.permission === "granted") {
                         for (let i = lastMessageCount; i < data.length; i++) {
                             if (data[i].sender !== currentUser) {
-                                new Notification(data[i].sender, {
-                                    body: data[i].text,
-                                    icon: "icon-192.png",
-                                    tag: "chat-msg" 
-                                });
+                                // دستور document.hidden یعنی کاربر رفته تو یه صفحه دیگه
+                                if (document.hidden) {
+                                    new Notification(data[i].sender, {
+                                        body: data[i].text,
+                                        icon: "icon-192.png",
+                                        tag: "chat-msg" 
+                                    });
+                                }
                             }
                         }
                     }
+
                     renderMessages(data);
                     lastMessageCount = data.length;
                     scrollToBottom();
