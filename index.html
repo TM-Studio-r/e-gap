@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>English gap</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="theme-color" content="#3390ec">
+
     <style>
         /* ================= متغیرهای تم تلگرامی ================= */
         :root {
@@ -111,7 +117,7 @@
                     <h1>English gap</h1>
                     <span></span>
                 </div>
-                <img src="f.png" alt="Group" class="group-avatar" onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%233390ec%22/%3E%3Ctext x=%2250%22 y=%2255%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Arial%22%3EEG%3C/text%3E%3C/svg%3E'">
+                <img src="icon-192.png" alt="Group" class="group-avatar" onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%233390ec%22/%3E%3Ctext x=%2250%22 y=%2255%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Arial%22%3EEG%3C/text%3E%3C/svg%3E'">
             </div>
         </header>
 
@@ -131,20 +137,15 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 
     <script>
-        // ================= راه‌اندازی PWA =================
-        const manifest = {
-            "name": "English gap",
-            "short_name": "E-gap",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#e5e5e5",
-            "theme_color": "#3390ec",
-            "icons": [{"src": "f.png", "sizes": "192x192", "type": "image/png"}]
-        };
-        const manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        manifestLink.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
-        document.head.appendChild(manifestLink);
+        // ================= راه‌اندازی سرویس ورکر =================
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then(function(registration) {
+                console.log('Service Worker ثبت شد!', registration.scope);
+            }).catch(function(err) {
+                console.log('خطا در ثبت Service Worker:', err);
+            });
+        }
 
         // ================= راه‌اندازی فایربیس =================
         const firebaseConfig = {
@@ -159,7 +160,6 @@
         const messaging = firebase.messaging();
 
         function setupFirebasePush() {
-            // اون کلید VAPID خفنی که پیدا کردی رو اینجا استفاده کردیم
             messaging.getToken({ vapidKey: "UlUzZ1Kq6JZx_eCKdy-Fb0VJTzQYRRVnOLXGfIBvtHA" })
             .then((currentToken) => {
                 if (currentToken) {
@@ -181,7 +181,6 @@
         let fetchInterval;
 
         function saveTokenToSupabase(token) {
-            // این توکن رو می‌فرستیم تو جدول جدید سوپابیس
             fetch(SUPABASE_TOKENS_URL, {
                 method: "POST",
                 headers: {
@@ -239,7 +238,6 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'flex';
             
-            // درخواست نوتیفیکیشن و راه‌اندازی فایربیس
             if ("Notification" in window) {
                 Notification.requestPermission().then(permission => {
                     if(permission === 'granted') {
@@ -260,20 +258,18 @@
             .then(res => res.json())
             .then(data => {
                 if (data.length > lastMessageCount) {
-                    
-                    // نوتیفیکیشن داخلی (برای وقتی که تب بازه ولی مثلاً داری یه خبر می‌خونی تو یه تب دیگه)
+                    // نوتیف داخلی (وقتی تب بازه)
                     if (lastMessageCount > 0 && "Notification" in window && Notification.permission === "granted") {
                         for (let i = lastMessageCount; i < data.length; i++) {
                             if (data[i].sender !== currentUser) {
                                 new Notification(data[i].sender, {
                                     body: data[i].text,
-                                    icon: "f.png",
+                                    icon: "icon-192.png",
                                     tag: "chat-msg" 
                                 });
                             }
                         }
                     }
-
                     renderMessages(data);
                     lastMessageCount = data.length;
                     scrollToBottom();
